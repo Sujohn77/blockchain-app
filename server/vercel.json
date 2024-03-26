@@ -1,5 +1,8 @@
 {
   "version": 2,
+  "env": {
+    "BLOCKCHAIN_API": "https://mainnet.infura.io/v3/a70eaa3006094bb1834f7dfb92dc0efb"
+  },
   "builds": [{ "src": "src/main.ts", "use": "@vercel/node" }],
   "routes": [
     {
