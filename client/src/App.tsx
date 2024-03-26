@@ -1,10 +1,6 @@
 import './App.css';
 
-import {
-  createBrowserRouter,
-  redirect,
-  RouterProvider,
-} from 'react-router-dom';
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import LoginPage from './screens/login';
 import ChatRoom from './screens/chat';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
