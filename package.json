@@ -1,0 +1,14 @@
+{
+  "name": "web3-app",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "client": "cd client && vite",
+    "server": "cd server && nest start --watch",
+    "start:concurrently": "concurrently 'npm run client' 'npm run server' ",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
