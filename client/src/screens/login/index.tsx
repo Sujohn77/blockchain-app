@@ -1,15 +1,14 @@
-import { Link, redirect } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { currentUserAtom } from '../../jotai';
 import { useAtom } from 'jotai';
-import { MouseEvent } from 'react';
+
 import { USER_INFO_KEY } from '../../utils/constants';
 
 const LoginPage = () => {
   const [userInfo, setUserInfo] = useAtom(currentUserAtom);
   const { username, chatId } = userInfo;
-  const isValidForm = username && chatId;
 
-  const onClick = (e: MouseEvent<HTMLAnchorElement>) => {
+  const onClick = () => {
     localStorage.setItem(USER_INFO_KEY, JSON.stringify(userInfo));
   };
 
