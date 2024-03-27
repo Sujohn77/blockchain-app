@@ -2,15 +2,9 @@ import { Link } from 'react-router-dom';
 import { currentUserAtom } from '../../jotai';
 import { useAtom } from 'jotai';
 
-import { USER_INFO_KEY } from '../../utils/constants';
-
 const LoginPage = () => {
   const [userInfo, setUserInfo] = useAtom(currentUserAtom);
   const { username, chatId } = userInfo;
-
-  const onClick = () => {
-    localStorage.setItem(USER_INFO_KEY, JSON.stringify(userInfo));
-  };
 
   return (
     <div>
@@ -35,9 +29,7 @@ const LoginPage = () => {
           }}
         />
 
-        <Link to={`/chat/${userInfo.chatId}`} onClick={onClick}>
-          Next
-        </Link>
+        <Link to={`/chat/${userInfo.chatId}`}>Next</Link>
       </form>
     </div>
   );
