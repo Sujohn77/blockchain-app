@@ -46,6 +46,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   handleConnection(client: Socket) {
     this.logger.log(`Client connected: ${client.id}`);
+    client.emit('authClient', client.id);
   }
 
   handleDisconnect(client: Socket) {
@@ -56,18 +57,18 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('joinChat')
   handleJoinChat(client: Socket, payload: { chatId: string }) {
     const { chatId } = payload;
+    client.join(chatId);
 
     if (!this.clientChatMap[client.id]) {
       this.clientChatMap[client.id] = chatId;
       this.server.to(chatId).emit('log', `New user connected: ${client.id}`);
-      client.join(chatId);
     }
 
     if (!this.messages[chatId]) {
       this.messages[chatId] = [];
       return [];
     }
-    client.join(chatId);
+
     client.emit('messages', this.messages[chatId]);
   }
 

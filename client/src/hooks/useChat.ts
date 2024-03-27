@@ -8,7 +8,7 @@ import { SERVER_URI } from '../utils/constants';
 
 export interface IMessage {
   id: string;
-  userId: string;
+  userId?: string;
   username: string;
   text: string;
   txid?: string;
@@ -31,6 +31,7 @@ export const useChat = (currentUser: IChatUserAtom) => {
   const [messages, setMessages] = useState<IMessage[]>([]);
   const [log, setLog] = useState<string>();
   const [_, setCurrentUser] = useAtom(currentUserAtom);
+
   useEffect(() => {
     const initSocket = async () => {
       socket = await io(SERVER_URI);
@@ -40,6 +41,10 @@ export const useChat = (currentUser: IChatUserAtom) => {
 
       socket.on('log', (log: string) => {
         setLog(log);
+      });
+
+      socket.on('authClient', (userId: string) => {
+        setCurrentUser({ ...currentUser, userId });
       });
 
       socket.on('messages', (messages: IMessage[]) => {
