@@ -23,12 +23,16 @@ interface IMessage {
   transaction?: any;
 }
 
+interface IUser {
+  userId: string;
+  username: string;
+}
+
 @WebSocketGateway({
   cors: {
     origin: '*',
   },
   serveClient: false,
-  // namespace: 'chat',
 })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
@@ -37,10 +41,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   private messages: Map<string, IMessage[]> = new Map();
   private logger: Logger = new Logger('ChatGateway');
   private clientChatMap: ClientChatMap = {}; // Maintain mapping of client IDs to chat IDs
+  private users: IUser[] = [];
 
   constructor() {
     const infuraEndpoint = process.env.BLOCKCHAIN_API;
-
     this.web3 = new Web3(infuraEndpoint);
   }
 

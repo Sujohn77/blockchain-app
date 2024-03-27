@@ -4,3 +4,8 @@ export const isValidTxid = (input: string) => {
 
   return regex.test(input);
 };
+
+export const getLocalStorageObject = (key: string) => {
+  const item = localStorage.getItem(key);
+  return item && JSON.parse(item);
+};
