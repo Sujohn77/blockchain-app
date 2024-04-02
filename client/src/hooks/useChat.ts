@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { io, Socket } from "socket.io-client";
 import {
-  getId,
   getLocalStorageObject,
   getMessagesToken,
   isValidTxid,
