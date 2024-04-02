@@ -1,14 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 
-import { IMessage, ITransaction, useChat } from '../../hooks/useChat';
-import { Slide, toast, ToastContainer } from 'react-toastify';
-import { useAtom } from 'jotai';
-import { currentUserAtom } from '../../jotai';
-import { getId } from '../../utils/helpers';
+import { IMessage, ITransaction, useChat } from "../../hooks/useChat";
+import { Slide, toast, ToastContainer } from "react-toastify";
+import { useAtom } from "jotai";
+import { currentUserAtom } from "../../jotai";
+import { getId } from "../../utils/helpers";
 
 const notify = (message: string) =>
   toast.info(message, {
-    position: 'top-left',
+    position: "top-left",
     autoClose: 1000,
     hideProgressBar: true,
     transition: Slide,
@@ -19,7 +19,7 @@ const Chat: React.FC = () => {
 
   const { chatActions, messages, log } = useChat(userInfo);
 
-  const [messageText, setMessageText] = useState<string>('');
+  const [messageText, setMessageText] = useState<string>("");
 
   useEffect(() => {
     if (!log) return;
@@ -42,22 +42,24 @@ const Chat: React.FC = () => {
     };
 
     chatActions.send(message);
-    setMessageText('');
+    setMessageText("");
   };
 
   const renderMessage = (message: IMessage) => {
-    const isOwnMessage = message.userId === userInfo.userId;
+    const isOwnMessage =
+      message.userId == userInfo.userId &&
+      message.username == userInfo.username;
     const customStyles = isOwnMessage
-      ? 'self-end bg-green-500'
-      : 'self-start bg-blue-500';
+      ? "self-end bg-green-500"
+      : "self-start bg-blue-500";
 
     return (
       <div
         key={message.id}
         className={[
-          'my-2 p-2 rounded-md text-white flex flex-col items-start',
+          "my-2 p-2 rounded-md text-white flex flex-col items-start",
           customStyles,
-        ].join(' ')}
+        ].join(" ")}
       >
         <b className="text-sm mb-1">By {message.username}:</b>
 

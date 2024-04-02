@@ -1,1 +1,2 @@
-web: npm run start:prod
+web: npm install --legacy-peer-deps
+web: npm start:prod

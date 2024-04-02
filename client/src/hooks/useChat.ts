@@ -1,10 +1,15 @@
-import { useCallback, useEffect, useState } from 'react';
-import { io, Socket } from 'socket.io-client';
-import { getLocalStorageObject, isValidTxid } from '../utils/helpers';
-import { redirect } from 'react-router-dom';
-import { IChatUserAtom, currentUserAtom } from '../jotai';
-import { useAtom } from 'jotai';
-import { SERVER_URI, USERS_KEY } from '../utils/constants';
+import { useCallback, useEffect, useState } from "react";
+import { io, Socket } from "socket.io-client";
+import {
+  getId,
+  getLocalStorageObject,
+  getMessagesToken,
+  isValidTxid,
+} from "../utils/helpers";
+import { redirect } from "react-router-dom";
+import { IChatUserAtom, currentUserAtom } from "../jotai";
+import { useAtom } from "jotai";
+import { SERVER_URI, USERS_KEY } from "../utils/constants";
 
 export interface IMessage {
   id: string;
@@ -28,7 +33,7 @@ export interface ILocalUser {
   username: string;
 }
 
-export interface MessageInput extends Omit<IMessage, 'id'> {}
+export interface MessageInput extends Omit<IMessage, "id"> {}
 
 let socket: Socket;
 export const useChat = (currentUser: IChatUserAtom) => {
@@ -40,16 +45,26 @@ export const useChat = (currentUser: IChatUserAtom) => {
     const initSocket = async () => {
       socket = await io(SERVER_URI);
 
-      socket.on('authClient', handleAuthChatUser);
-
+      const token = getMessagesToken();
       const user = getUserOrRedirect();
-      user && socket.emit('joinChat', { chatId: user.chatId });
+      user &&
+        socket.emit("joinChat", {
+          chatId: user.chatId,
+          username: user.username,
+          token,
+        });
 
-      socket.on('log', (log: string) => {
+      socket.on("log", (log: string) => {
         setLog(log);
       });
 
-      socket.on('messages', (messages: IMessage[]) => {
+      socket.on("currentUserId", (id: string) => {
+        setCurrentUser({ ...currentUser, userId: id });
+        handleAuthChatUser(id);
+      });
+
+      socket.on("messages", (messages: IMessage[]) => {
+        console.log(messages);
         setMessages(messages);
       });
 
@@ -69,8 +84,7 @@ export const useChat = (currentUser: IChatUserAtom) => {
     const localChatUsers: ILocalUser[] = getLocalStorageObject(USERS_KEY) || [];
 
     const existingUser = localChatUsers.find(
-      (localUser) =>
-        localUser.userId && localUser.username == currentUser.username
+      (localUser) => localUser.userId == userId
     );
 
     if (!existingUser) {
@@ -98,13 +112,15 @@ export const useChat = (currentUser: IChatUserAtom) => {
       return currentUser;
     }
 
-    redirect('/login');
+    redirect("/login");
   };
 
   const send = useCallback((payload: MessageInput) => {
-    socket.emit('message:post', {
+    const token = getMessagesToken();
+    socket.emit("message:post", {
       ...payload,
       isTxid: isValidTxid(payload.text),
+      token,
     });
   }, []);
 

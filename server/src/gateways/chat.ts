@@ -9,7 +9,8 @@ import {
 import { Socket } from 'socket.io';
 import { Logger } from '@nestjs/common';
 import Web3 from 'web3';
-
+import * as bcrypt from 'bcrypt';
+import { getId } from 'src/utils/helpers';
 interface ClientChatMap {
   [clientId: string]: string; // Mapping of client IDs to chat IDs
 }
@@ -26,7 +27,11 @@ interface IMessage {
 interface IUser {
   userId: string;
   username: string;
+  token: string;
+  chatId: string;
 }
+
+const saltRounds = 10;
 
 @WebSocketGateway({
   cors: {
@@ -48,9 +53,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.web3 = new Web3(infuraEndpoint);
   }
 
-  handleConnection(client: Socket) {
+  async handleConnection(client: Socket) {
     this.logger.log(`Client connected: ${client.id}`);
-    client.emit('authClient', client.id);
   }
 
   handleDisconnect(client: Socket) {
@@ -59,15 +63,28 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('joinChat')
-  handleJoinChat(client: Socket, payload: { chatId: string }) {
-    const { chatId } = payload;
+  async handleJoinChat(
+    client: Socket,
+    payload: { chatId: string; username: string; token: string },
+  ) {
+    const { chatId, username, token } = payload;
 
-    if (!this.clientChatMap[client.id]) {
-      this.clientChatMap[client.id] = chatId;
-      this.server.to(chatId).emit('log', `New user connected: ${client.id}`);
-    }
-
+    const existingUser = this.users.find(
+      (user) =>
+        user.username === username &&
+        user.token === token &&
+        user.chatId == chatId,
+    );
     client.join(chatId);
+
+    if (!existingUser) {
+      const userId = getId();
+      this.server.to(chatId).emit('log', `New user connected: ${client.id}`);
+      this.users.push({ userId, username, token, chatId });
+      client.emit('currentUserId', userId);
+    } else {
+      client.emit('currentUserId', existingUser.userId);
+    }
 
     if (!this.messages[chatId]) {
       this.messages[chatId] = [];
@@ -78,16 +95,28 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('message:post')
-  async handlePostMessage(client: Socket, payload: IMessage) {
-    const chatId = this.clientChatMap[client.id]; // Get chat ID associated with the client
-    if (!chatId) {
+  async handlePostMessage(
+    client: Socket,
+    payload: IMessage & { token: string },
+  ) {
+    const { token, userId, username } = payload;
+    const user = this.users.find(
+      (user) =>
+        user.userId == userId &&
+        user.token == token &&
+        user.username == username,
+    );
+
+    if (!user?.chatId) {
       return;
     }
 
+    const chatId = user.chatId;
     try {
       // Retrieve transaction details
       if (payload.isTxid) {
         const txid = payload.text.trim();
+
         const data = await this.web3.eth.getTransaction(txid);
         const block = await this.web3.eth.getBlock(data.blockNumber);
         const timestamp = block.timestamp;
@@ -99,7 +128,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
           date: new Date(Number(timestamp) * 1000),
         };
 
-        this.messages[chatId].push({ ...payload, transaction });
+        this.messages[chatId].push({
+          ...payload,
+          transaction,
+        });
       } else {
         this.messages[chatId].push(payload);
       }
